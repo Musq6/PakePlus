@@ -23,10 +23,11 @@ export const fileSizeLimit = import.meta.env.VITE_FILE_LIMIT_SIZE * 1024 * 1024
 export const fileLimitNumber = import.meta.env.VITE_FILE_LIMIT_NUMBER
 
 // pay info
-export const basePAYJSURL = import.meta.env.VITE_PAYJS_DOMAIN
+export const ppApisDomain = import.meta.env.VITE_PPAPI_DOMAIN
+export const basePayjsUrl = import.meta.env.VITE_PAYJS_DOMAIN
 export const payJsMchid = import.meta.env.VITE_PAYJS_MCHID
 export const payJsSignKey = import.meta.env.VITE_PAYJS_SIGN_KEY
-export const baseYUNPAYURL = import.meta.env.VITE_YUNPAY_DOMAIN
+export const baseYunPayUrl = import.meta.env.VITE_YUNPAY_DOMAIN
 export const yunPayMchid = import.meta.env.VITE_YUNPAY_MCHID
 export const yunPaySignKey = import.meta.env.VITE_YUNPAY_SIGN_KEY
 export const rhExeUrl = import.meta.env.VITE_LOCAL_RHEXE
@@ -209,7 +210,7 @@ export const supportPP = async () => {
             await githubApi.followingUser()
             await githubApi.startProgect('PakePlus')
             await githubApi.startProgect('PakePlus-Android')
-            // await githubApi.startProgect('PakePlus-iOS')
+            await githubApi.startProgect('PakePlus-iOS')
         }
     } catch (error) {
         console.error('supportPP error', error)
@@ -579,37 +580,6 @@ export const getTauriConfFetch = async (params: any) => {
     return base64Encode(content)
 }
 
-// get init.txt file content
-export const getInitRust = async (params: any) => {
-    // 将visible: true 替换为 visible: false
-    params.config = JSON.parse(params.config)
-    params.config.visible = false
-    params.config = JSON.stringify(params.config)
-    if (isTauri) {
-        const content = await invoke('update_init_rs', params)
-        return content
-    } else {
-        let content = await readStaticFile('init.txt')
-        if (content === 'error') {
-            return 'error'
-        }
-        // 替换WINDOWCONFIG
-        content = content.replaceAll('WINDOWCONFIG', params.config)
-        // 替换STATE
-        if (!params.state) {
-            content = content.replaceAll('if true {', 'if false {')
-        }
-        if (params.injectjq) {
-            // 替换INJECTJQ
-            content = content.replaceAll(
-                '.initialization_script(include_str!("../../data/custom.js"))',
-                `.initialization_script(include_str!("../../data/jquery.min.js"))\r.initialization_script(include_str!("../../data/custom.js"))`
-            )
-        }
-        return base64Encode(content)
-    }
-}
-
 // get init.rs file content
 export const getLibRsFetch = async (params: any) => {
     let content = await readStaticFile('lib.txt')
@@ -650,13 +620,6 @@ export const getInitRustFetch = async (params: any) => {
     // 替换STATE
     if (!params.state) {
         content = content.replaceAll('if true {', 'if false {')
-    }
-    if (params.injectjq) {
-        // 替换INJECTJQ
-        content = content.replaceAll(
-            '.initialization_script(include_str!("../../data/custom.js"))',
-            `.initialization_script(include_str!("../../data/jquery.min.js"))\r.initialization_script(include_str!("../../data/custom.js"))`
-        )
     }
     return base64Encode(content)
 }

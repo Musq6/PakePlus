@@ -645,6 +645,7 @@
                     <el-button @click="getPayJsCode('alipay')">
                         paypal
                     </el-button>
+                    <el-button @click="getPpApis"> ppapis </el-button>
                 </div>
                 <!-- plugin-os api -->
                 <div v-else-if="menuIndex === '2-14'" class="cardContent">
@@ -799,7 +800,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.downloadFile"
+                            :code="Codes.downloadFile.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -810,7 +811,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.downProgress"
+                            :code="Codes.downProgress.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -886,7 +887,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.openUrlCurrent"
+                            :code="Codes.openUrlCurrent.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -897,7 +898,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.openUrlNew"
+                            :code="Codes.openUrlNew.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -908,7 +909,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.openUrlBrowser"
+                            :code="Codes.openUrlBrowser.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -937,7 +938,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.runShell"
+                            :code="Codes.runShell.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -987,7 +988,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.removeEle"
+                            :code="Codes.removeEle.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -998,7 +999,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.addEle"
+                            :code="Codes.addEle.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -1009,7 +1010,7 @@
                         </p>
                         <CodeEdit
                             lang="javascript"
-                            :code="Codes.modifyEle"
+                            :code="Codes.modifyEle.trim()"
                             :disabled="true"
                         />
                     </div>
@@ -1030,6 +1031,23 @@
                         <p class="description">
                             {{ t('autoOperationDesc') }}
                         </p>
+                    </div>
+                </div>
+                <!-- api/listenData -->
+                <div v-else-if="menuIndex === '3-3'" class="cardContent">
+                    <h1 class="cardTitle">listenData</h1>
+                    <p>Listen web data</p>
+                    <div class="cardBox">
+                        <el-tooltip content="open debug" placement="bottom">
+                            <el-button @click="debugHandler('open')">
+                                开启调试
+                            </el-button>
+                        </el-tooltip>
+                        <el-tooltip content="close debug" placement="bottom">
+                            <el-button @click="debugHandler('close')">
+                                关闭调试
+                            </el-button>
+                        </el-tooltip>
                     </div>
                 </div>
                 <!-- api/template -->
@@ -1129,8 +1147,8 @@ import Codes from '@/utils/codes'
 import {
     arrayBufferToBase64,
     base64PngToIco,
-    basePAYJSURL,
-    baseYUNPAYURL,
+    basePayjsUrl,
+    baseYunPayUrl,
     getPaySign,
     oneMessage,
     openSelect,
@@ -1544,12 +1562,23 @@ const getPayJsCode = async (payMathod: string = 'weixin') => {
                 `${encodeURIComponent(key)}=${encodeURIComponent(order[key])}`
         )
         .join('&')
-    const payUrl = basePAYJSURL + '/api/cashier?' + queryString
+    const payUrl = basePayjsUrl + '/api/cashier?' + queryString
     console.log('payUrl', payUrl)
     const url = await QRCode.toDataURL(payUrl)
     console.log('url', url)
     dialogVisible.value = true
     qrCodeData.value = url
+}
+
+// get ppapi json
+const getPpApis = async () => {
+    const response = await payApi.getPpApis()
+    console.log('response----', response)
+    if (response.status === 200) {
+        console.log('data----', response.data)
+    } else {
+        oneMessage.error(t('getPpApisError'))
+    }
 }
 
 // get yun pay code
@@ -1990,6 +2019,16 @@ const downFile = async (selPath: boolean = true) => {
     })
 }
 
+// open vconsole
+let vConsole: any = null
+const debugHandler = (type: string = 'open') => {
+    if (type === 'open') {
+        vConsole = new window.VConsole()
+    } else {
+        vConsole.destroy()
+    }
+}
+
 listen('download_progress', (event: any) => {
     console.log(`downloading fileId--- ${event.payload.fileId}`)
     console.log(`downloading downloaded--- ${event.payload.downloaded}`)
@@ -2009,6 +2048,8 @@ onMounted(() => {
     if (about) {
         defaultMenu.value = '4'
         menuIndex.value = '4'
+    } else {
+        handleMenu(menuIndex.value)
     }
 })
 </script>
